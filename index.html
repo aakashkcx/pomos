@@ -1,0 +1,23 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pomos - A pomodoro timer for groups</title>
+  </head>
+  <body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      socket.emit("join", window.location.pathname.substring(1));
+
+      socket.on("user-join", (user_id) => {
+        console.log(`User joined ${user_id}`);
+      });
+
+      socket.on("user-leave", (user_id) => {
+        console.log(`User left ${user_id}`);
+      });
+    </script>
+  </body>
+</html>
