@@ -8,8 +8,8 @@
   <body>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      const socket = io();
-      socket.emit("join", window.location.pathname.substring(1));
+      const room_id = window.location.pathname.substring(1);
+      const socket = io({ query: { room_id } });
 
       socket.on("user-join", (user_id) => {
         console.log(`User joined ${user_id}`);
@@ -18,6 +18,70 @@
       socket.on("user-leave", (user_id) => {
         console.log(`User left ${user_id}`);
       });
+    </script>
+
+    <h1><span id="mins">00</span>:<span id="secs">00</span></h1>
+
+    <button onclick="startWork()">Work</button>
+    <input id="lengthWork" type="number" min="1" value="30" />
+    <button onclick="startBreak()">Break</button>
+    <input id="lengthBreak" type="number" min="1" value="5" />
+
+    <button onclick="stop()">Stop</button>
+
+    <script>
+      const minsElement = document.querySelector("#mins");
+      const secsElement = document.querySelector("#secs");
+
+      let time;
+      let interval;
+
+      function startWork() {
+        const seconds = document.querySelector("#lengthWork").value * 60;
+        socket.emit("start-work", seconds);
+      }
+
+      function startBreak() {
+        const seconds = document.querySelector("#lengthBreak").value * 60;
+        socket.emit("start-break", seconds);
+      }
+
+      function stop() {
+        socket.emit("stop");
+      }
+
+      socket.on("start-work", (seconds) => {
+        time = seconds;
+        countdown();
+      });
+
+      socket.on("start-break", (seconds) => {
+        time = seconds;
+        countdown();
+      });
+
+      socket.on("stop", () => {
+        time = 0;
+        clearInterval(interval);
+        update();
+      });
+
+      function update() {
+        minsElement.textContent = Math.floor(time / 60);
+        secsElement.textContent = time % 60;
+      }
+
+      function countdown() {
+        update();
+        interval = setInterval(() => {
+          if (time > 0) {
+            time--;
+            update();
+          } else {
+            clearInterval(interval);
+          }
+        }, 1000);
+      }
     </script>
   </body>
 </html>

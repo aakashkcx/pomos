@@ -21,18 +21,26 @@ const server = app.listen(PORT, () =>
 const io = socketio(server);
 
 io.on("connection", (socket) => {
-  console.log(`Socket connected ${socket.id}`);
+  const room_id = socket.handshake.query.room_id;
 
-  socket.on("join", (room_id) => {
-    socket.join(room_id);
-    socket.to(room_id).emit("user-join", socket.id);
+  socket.join(room_id);
+  io.to(room_id).emit("user-join", socket.id);
+  console.log(`[Room ${room_id}] Socket connected ${socket.id}`);
+
+  socket.on("start-work", (seconds) => {
+    io.to(room_id).emit("start-work", seconds);
+  });
+
+  socket.on("start-break", (seconds) => {
+    io.to(room_id).emit("start-break", seconds);
+  });
+
+  socket.on("stop", () => {
+    io.to(room_id).emit("stop");
   });
 
   socket.on("disconnecting", () => {
-    console.log(`Socket disconnected ${socket.id}`);
-    socket.rooms.forEach((room_id) => {
-      console.log(room_id);
-      socket.to(room_id).emit("user-leave", socket.id);
-    });
+    io.to(room_id).emit("user-leave", socket.id);
+    console.log(`[Room ${room_id}] Socket disconnected ${socket.id}`);
   });
 });
